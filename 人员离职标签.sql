@@ -21,11 +21,10 @@ drop trigger tri_lz_bq;
 select id, lastname, status, seclevel from hrmresource where rownum <= 10;
 
 
---update hrmresource set lastname=replace(lastname,'(LZ)','') where id = 193;
-
 update hrmresource set status=5 where id = 193;
 
 update hrmresource set status=1 where id = 193;
+
 
 create or replace trigger tri_log
   before update of status on hrmresource
