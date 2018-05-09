@@ -27,9 +27,20 @@ select * from v_gn_bm;
 create or replace trigger tri_bmjz_jk
   after insert or update
   on matrixtable_40
+  for each row
   begin
     update MATRIXTABLE_2 set BMFZR= :new.bmfzr,bmfgld= :new.bmfg where id = :new.bm;
-    update HRMDEPARTMENTDEFINED set bmfz= :new.BMFZR,BMFGLD= :new.BMFG where DEPTID = :new.bm;
+    update HRMDEPARTMENTDEFINED set BMFZR= :new.BMFZR,BMFGLD= :new.BMFG where DEPTID = :new.bm;
   end;
 
   select * from HRMDEPARTMENTDEFINED;
+
+create or replace trigger tri_hrmdepartmentdefined --无需监控部门自定义表
+  after update
+  on HRMDEPARTMENTDEFINED
+  for each row
+  begin
+    update MATRIXTABLE_2 set BMFZR= :new.BMFZR,BMFGLD= :new.BMFGLD where id= :new.DEPTID;
+  end;
+
+  drop trigger tri_hrmdepartmentdefined;
