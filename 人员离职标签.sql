@@ -2,17 +2,17 @@ create or replace trigger tri_lz_bq
   before update of status on hrmresource
   for each row
 DECLARE
-  PRAGMA AUTONOMOUS_TRANSACTION; --声明自治事务
+  PRAGMA AUTONOMOUS_TRANSACTION;
 begin
   if :new.status = 5 and :old.status <>5 then
-    --:new.lastname := replace(:old.lastname, '(LZ)', ''); --有问题
+    --:new.lastname := replace(:old.lastname, '(LZ)', '');---There is a question
     :new.lastname := :old.lastname || '(LZ)';
   elsif :new.status = 5 and :old.status = 5 then
     return;    
    else
     :new.lastname := replace(:old.lastname, '(LZ)', '');
   end if;
-  commit; --提交自治事务
+  commit;
 end tri_lz_bq;
 
 drop trigger tri_lz_bq;
@@ -31,12 +31,12 @@ create or replace trigger tri_log
   before update of status on hrmresource
   for each row
 DECLARE
-  PRAGMA AUTONOMOUS_TRANSACTION; --声明自治事务
+  PRAGMA AUTONOMOUS_TRANSACTION; --??????
 begin
   insert into Temp_log values(:old.lastname,:new.lastname);
   :new.lastname := replace(:old.lastname,'(LZ)','');
   insert into Temp_log values(:old.lastname,:new.lastname);
-  commit; --提交自治事务
+  commit; --??????
 end tri_lz_bq;
 
 
