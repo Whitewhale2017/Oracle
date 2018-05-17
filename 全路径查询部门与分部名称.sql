@@ -32,5 +32,5 @@ create or replace function f_gsqc(v_id integer)
     return v_res;
   end;
 
-  select LASTNAME,SUBCOMPANYID1,DEPARTMENTID,f_gsqc(SUBCOMPANYID1)||'||'||f_bmqc(DEPARTMENTID)
-  from HRMRESOURCE where rownum <=10;
+ select LASTNAME,SUBCOMPANYID1,DEPARTMENTID,f_gsqc(SUBCOMPANYID1)||'||'||f_bmqc(DEPARTMENTID)
+  from HRMRESOURCE where rownum <=100;
