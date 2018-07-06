@@ -99,14 +99,16 @@ select * from v_kqjg where bklx=3;
 
 select lastname,STARTDATE from hrmresource where STARTDATE>='2018-06-10';
 
-select * from HRMANNUALMANAGEMENT where RESOURCEID in (78,226,144) and ANNUALYEAR = 2018;--Äê¼Ù
+select * from HRMANNUALMANAGEMENT where RESOURCEID = 6305;--Äê¼Ù
 
+update HRMANNUALMANAGEMENT set ANNUALDAYS = 99 where RESOURCEID = (select id from HRMRESOURCE where WORKCODE = '100933') and ANNUALYEAR = 2018;
 
-
-
+commit;
 --´øÐ½²¡¼Ù
 update HRMPSLMANAGEMENT set PSLDAYS = 3 where RESOURCEID in (78,2646,232,2241,141) and PSLYEAR = '2018';
 
-select * from HRMPSLMANAGEMENT where PSLYEAR = '2018';
+select * from HRMPSLMANAGEMENT where RESOURCEID = 6305;
 
-select id,lastname,workcode,SUBCOMPANYID1 from HRMRESOURCE where lastname like 'ÁõÖÇ%';
+update HRMPSLMANAGEMENT set PSLDAYS = 22 where RESOURCEID = (select id from HRMRESOURCE where WORKCODE = '100933') and PSLYEAR = 2018;
+
+select id,lastname,workcode,SUBCOMPANYID1 from HRMRESOURCE where lastname like 'ÍõÑô%';
