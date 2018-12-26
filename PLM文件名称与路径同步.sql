@@ -1,11 +1,14 @@
 select ID,FNAME,Location,PFNAME,Plocation from sipm2 where id='59670';
 
-update sipm2 set FNAME='DA1800475N¸½¼þ.pdf',
+insert into sipm2(id,fname,location) values('59671','1.pdf','11');
+
+update sipm2 set FNAME='DA1800475N¸½¼þ1.pdf',
 location='/oadata/filesystem/201808/K/2910c476-f401-4688-aef6-8b030b2df6c8'
 where id='59670';
-
 update sipm2 set PFNAME='',Plocation='' where id='59670';
+
 commit;
+rollback;
 
 create or replace trigger TRIG_SIPM2
   before insert or update of fname,location
