@@ -32,4 +32,4 @@ AND s.username IS NOT NULL
 ORDER BY sid;
 
 --杀掉进程 sid,serial#
-alter system kill session '7,4653'; --注意需要两个参数
+alter system kill session '1346,3167'; --注意需要两个参数

@@ -9,16 +9,10 @@ begin
        select '01_'||SYS_GUID() id,t.no, name, ename, pno, bompst, cno, bnum, pbompkgid, bomver, v_werks, routeno,
        pspnr, zcomplete, emeng, postp, ausch, alpgr, zkey, zposition, sanka, smemo, ztext, plant, bwz, pwlms, cwlms, xncp,v_operator,v_operator
        from pbomlib a
-       left join (
-       select no,werks,BESKZ,sbdkz,sobsl from sipm94
-       where not exists(select 1 from wk_sipm94 a where sipm94.no=a.no and sipm94.werks=a.werks) and  werks = '1001'
-       union
-       select  no,werks,BESKZ,sbdkz,sobsl from sipm190_last
-       where not exists(select 1 from wk_sipm94 a where sipm190_last.no=a.no and sipm190_last.werks=a.werks) and  werks = '1001'
-       union
-       select no,werks,BESKZ,sbdkz,sobsl from wk_sipm94 where werks = '1001'
+       inner join (
+        select no,werks,BESKZ,sbdkz,sobsl,nfwerks from sipm170 where pbompkgid=v_pbompkgid
        ) t
-       on t.no=a.pno and t.werks=a.werks
+       on t.no=a.pno and t.nfwerks=a.werks
        where a.pbompkgid=v_pbompkgid and a.werks='1001' 
        and 
        ((t.beskz='E' and t.sbdkz='1')
@@ -30,6 +24,7 @@ begin
        (t.beskz='X' and t.sbdkz='2' and t.sobsl is null)
        )
        ;
+       commit;
      -- dbms_output.put_line(to_char(sysdate,'yyyy-mm-dd hh24:mi:ss'))£»
   end;
 /

@@ -8,13 +8,13 @@ begin
 if r_id is not null then
       select F_JSPBOMWSERKS(v_pbompkgid) into r_werks from dual;
       if  r_werks = '1001' then
-         delete from sipm170 where pbompkgid = v_pbompkgid;
-         delete from bom7 where pbompkgid = v_pbompkgid;
-         delete from SIPM171 where pbompkgid = v_pbompkgid;
+          delete from sipm170 where pbompkgid = v_pbompkgid;
+          delete from bom7 where pbompkgid = v_pbompkgid;
+          delete from SIPM171 where pbompkgid = v_pbompkgid;
          
           dbms_output.put_line('开始扩展物料 ：'||to_char(sysdate,'yyyy-mm-dd hh24:mi:ss'));
           proc_expand_1806(v_pbompkgid,v_operator);
-           dbms_output.put_line('物料扩展结束 ：'||to_char(sysdate,'yyyy-mm-dd hh24:mi:ss'));
+          dbms_output.put_line('物料扩展结束 ：'||to_char(sysdate,'yyyy-mm-dd hh24:mi:ss'));
            
           dbms_output.put_line('开始扩展后继物料 ：'||to_char(sysdate,'yyyy-mm-dd hh24:mi:ss'));
           proc_expand_nf_1806(v_pbompkgid,v_operator);
@@ -25,8 +25,9 @@ if r_id is not null then
           dbms_output.put_line('PBOM扩展结束 ：'||to_char(sysdate,'yyyy-mm-dd hh24:mi:ss'));
           
           dbms_output.put_line('开始扩展工艺路线 ：'||to_char(sysdate,'yyyy-mm-dd hh24:mi:ss'));
-           proc_expand_processlib_1806(v_pbompkgid varchar2,v_operator nvarchar2);
-           dbms_output.put_line('工艺路线扩展结束 ：'||to_char(sysdate,'yyyy-mm-dd hh24:mi:ss'));
+          proc_expand_processlib_1806(v_pbompkgid,v_operator);
+          dbms_output.put_line('工艺路线扩展结束 ：'||to_char(sysdate,'yyyy-mm-dd hh24:mi:ss'));
+          
           commit;
       elsif r_werks = '1002' then
          delete from sipm170 where pbompkgid = v_pbompkgid;
