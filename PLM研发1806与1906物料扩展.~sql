@@ -2,7 +2,7 @@
 --------------创建三个新增对象的数据结构，可参考各自对应的传SAP日志表---------------------
 create table SIPM170 as select * from SIPM190 where 1=2; --研发物料
 
-select * from SIPM170;
+
 
 create table BOM7 as select * from BOM10 where 1=2; --研发BOM
 
@@ -156,12 +156,9 @@ CREATE global temporary TABLE "SSPLM"."TEMP_WK_PARTLIB"
   "ZMSGTP2" NVARCHAR2(1), 
   "ZMESTX" NVARCHAR2(150), 
   "PRFRQ" NUMBER(5,0), 
-  "AUSCH" NUMBER(5,2),
-  "ORDERNUM" NUMBER(9)
+  "AUSCH" NUMBER(5,2)
    )
    on commit delete rows ;---创建事务临时表TEMP_WK_PARTLIB存储工作区某pbompkgid的数据记录
-   
-   drop table TEMP_WK_PARTLIB;
 ----------------
 select id,pbompkgid,pno,werks,cno,bnum
 from PBOMLIB 
