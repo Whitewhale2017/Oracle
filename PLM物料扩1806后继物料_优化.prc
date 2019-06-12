@@ -1,4 +1,4 @@
-create or replace procedure proc_expand_1806(v_pbompkgid varchar2,v_operator nvarchar2)
+create or replace procedure proc_expand_nf_1806_yh(v_pbompkgid varchar2,v_operator nvarchar2)--扩展后继物料
 as
 v_werks NVARCHAR2(4); --werks工厂
 v_beskz NVARCHAR2(33); --beskz采购类型
@@ -9,7 +9,7 @@ v_sobsl NVARCHAR2(33); --SOBSL特殊采购类型
 ---NFMAT 后继物料
 begin
         ---顺序一：---------------------------
-      
+
         dbms_output.put_line(to_char(sysdate,'yyyy-mm-dd hh24:mi:ss'));
 
         ------将工作区同pbompkgid的数据插入临时表temp_wk_partlib-------------
@@ -56,14 +56,46 @@ begin
        LEFT JOIN WK_SIPM98_OBJOF T8O ON TB.ID = T8O.ITEMID1 AND T8O.DEL=0 AND T8O.WKAID<>'3'
        LEFT JOIN WK_SIPM98 T8 ON T8O.ITEMID2 = T8.ID AND T8.DEL=0 AND T8.WKAID<>'3'
        WHERE TB.DEL=0 AND TB.WKAID<>'3'
-       AND TB.PBOMPKGID = v_pbompkgid                                     
+       AND TB.PBOMPKGID = v_pbompkgid
        AND TB.NO IS NOT NULL;
-       
+
        dbms_output.put_line('将工作区同pbompkgid的数据插入临时表temp_wk_partlib :'||to_char(sysdate,'yyyy-mm-dd hh24:mi:ss'));
        
-       ----顺序一：扩展物料主数据------
+       insert into TEMP_WK_MATLIB(id, publishtn, publishid, stn, sid, syncbatchno, syncdataitemno, syncuser, synctime, syncresult, syncmsg, needsyncsign, 
+       fmaterialid, del, msym, wkaid, designno, bldesignno, no, name, ver, ptype, ename, creator, ctime, muser, mtime, chkusr, chktime, 
+       duser, deltime, alteruser, owner, state, smemo, pbompkgid, fromid, mtart, extwg, matkl, groes, spart, oldno, maktx, tdline, zind, 
+       unit, zvariant, zmaktx, zsize, ztype, zcolor, zbranch, zauth, zrohs, zpackage, zpaper, zversion, zmanual, mstae, mtpos, werks, 
+       classnum, classtype, numerator, denominatr, bstme, xchpf, kordb, ekgrp, ztdline1, vkorg, vtweg, ktgrm, aland, tatyp, taxkm, mtpos1, 
+       tragr, ladgr, ztdline2, dismm, dispo, disls, bstrf, bstmi, berid, dispr, beskz, sobsl, rgekm, lgfsb, lgpro, dzeit, plifz, webaz, fhori, 
+       eisbe, perkz, strgr, vrmod, vint1, vint2, miskz, mtvfp, kzaus, nfmat, sbdkz, fevor, co_prodprf, mhdrz, mhdhb, loggr, lgnum, ltkze, qmatv, 
+       qpart, qmata, ssqss, ztdline3, bklas, eklas, qklas, mlast, peinh, vprsv, losgr, awsls, hrkft, prctr, ekalr, hkmat, sobsk, zplp3, zpld3, sipm91id, 
+       sipm94id, sipm95id, sipm96id, 
+        sipm97id, sipm98id, ztime1, zdate, ztime2, zmsgtp2, zmestx, prfrq, ausch, ordernum )
+       select id, publishtn, publishid, stn, sid, syncbatchno, syncdataitemno, syncuser, synctime, syncresult, syncmsg, needsyncsign, 
+       fmaterialid, del, msym, wkaid, designno, bldesignno, no, name, ver, ptype, ename, creator, ctime, muser, mtime, chkusr, chktime, 
+       duser, deltime, alteruser, owner, state, smemo, pbompkgid, fromid, mtart, extwg, matkl, groes, spart, oldno, maktx, tdline, zind, 
+       unit, zvariant, zmaktx, zsize, ztype, zcolor, zbranch, zauth, zrohs, zpackage, zpaper, zversion, zmanual, mstae, mtpos, werks, 
+       classnum, classtype, numerator, denominatr, bstme, xchpf, kordb, ekgrp, ztdline1, vkorg, vtweg, ktgrm, aland, tatyp, taxkm, mtpos1, 
+       tragr, ladgr, ztdline2, dismm, dispo, disls, bstrf, bstmi, berid, dispr, beskz, sobsl, rgekm, lgfsb, lgpro, dzeit, plifz, webaz, fhori, 
+       eisbe, perkz, strgr, vrmod, vint1, vint2, miskz, mtvfp, kzaus, nfmat, sbdkz, fevor, co_prodprf, mhdrz, mhdhb, loggr, lgnum, ltkze, qmatv, 
+       qpart, qmata, ssqss, ztdline3, bklas, eklas, qklas, mlast, peinh, vprsv, losgr, awsls, hrkft, prctr, ekalr, hkmat, sobsk, zplp3, zpld3, sipm91id, 
+       sipm94id, sipm95id, sipm96id, 
+        sipm97id, sipm98id, ztime1, zdate, ztime2, zmsgtp2, zmestx, prfrq, ausch, ordernum  from (
+        select * from TEMP_WK_PARTLIB
+              union
+              select a1.* from sipm190_last  a1
+              inner join (select NFMAT,nfwerks from SIPM170 where pbompkgid=v_pbompkgid) t1
+              on a1.werks=t1.nfwerks and (a1.no = t1.NFMAT)
+              and not exists(
+              select 1 from TEMP_WK_PARTLIB t
+              where a1.no=t.no and a1.werks=t.werks)
+        ) t;
+       
+        dbms_output.put_line('将所有物料数据插入临时表TEMP_WK_MATLIB :'||to_char(sysdate,'yyyy-mm-dd hh24:mi:ss'));
+
+       ----顺序一：扩展后继物料主数据------
         v_werks := '1806';
-        v_beskz := 'E'; 
+        v_beskz := 'E';
         v_sbdkz := '1';
         v_berid := 'NMRP_1806';
         v_dispr := 'SS01';
@@ -88,44 +120,28 @@ begin
        lgpro, dzeit, plifz, webaz, fhori, eisbe, perkz, strgr, vrmod, vint1, vint2, miskz, mtvfp, kzaus, nfmat, v_sbdkz, fevor, co_prodprf,
        mhdrz, mhdhb, loggr, lgnum, ltkze, qmatv, qpart, qmata, ssqss, ztdline3, bklas, eklas, qklas, mlast, peinh, vprsv, losgr, awsls, hrkft,
        prctr, ekalr, hkmat, sobsk, zplp3, zpld3, sipm91id, sipm94id, sipm95id, sipm96id, sipm97id, sipm98id, ztime1, zdate, ztime2, zmsgtp2,
-       zmestx, prfrq, ausch,2,werks
-       from ( select * from TEMP_WK_PARTLIB
-              union                 
-              select a1.* from sipm190_last  a1
-              inner join (select * from pbomlib where pbompkgid=v_pbompkgid) t1
-              on a1.werks=t1.werks and (a1.no = t1.pno or a1.no = t1.cno)
-              and not exists(
-              select 1 from (select * from TEMP_WK_PARTLIB) t 
-              where a1.no=t.no and a1.werks=t.werks)
-              ) t
+       zmestx, prfrq, ausch,1,werks
+       from TEMP_WK_MATLIB t
 
         where id in
-       ( select id from (select max(t1.id) id, t1.no, t1.werks, t1.beskz, t1.sobsl,t1.sbdkz
-                           from  ( select * from TEMP_WK_PARTLIB
-              union                 
-              select a1.* from sipm190_last  a1
-              inner join (select * from pbomlib where pbompkgid=v_pbompkgid) t1
-              on a1.werks=t1.werks and (a1.no = t1.pno or a1.no = t1.cno)
-              and not exists(
-              select 1 from (select * from TEMP_WK_PARTLIB) t 
-              where a1.no=t.no and a1.werks=t.werks)
-                                    
-                                    ) t1
-                                    where t1.werks in ('1001','1801')
-                                    group by t1.no, t1.werks, t1.beskz, t1.sobsl,t1.sbdkz) t
-             where t.werks='1001' and t.beskz='E' and t.sbdkz='1' and t.no in  ---筛选条件一
-             (select pno as matnr from pbomlib where pbompkgid=v_pbompkgid and werks in ('1001','1801') group by pno
-               union
-               select cno as matnr from pbomlib where pbompkgid=v_pbompkgid and werks in ('1001','1801') group by cno
+       ( select id from (
+                select max(t1.id) id, t1.no, t1.werks, t1.beskz, t1.sobsl,t1.sbdkz
+                from  TEMP_WK_MATLIB t1
+                 where t1.werks in ('1001','1801')
+                 group by t1.no, t1.werks, t1.beskz, t1.sobsl,t1.sbdkz
+                 ) t
+         where t.werks='1001' and t.beskz='E' and t.sbdkz='1' and t.no in  ---筛选条件一
+             (
+              select NFMAT from SIPM170 where pbompkgid=v_pbompkgid and nfwerks in ('1001','1801') group by NFMAT
               )
               and no not in (select no from SIPM170 where pbompkgid=v_pbompkgid group by no)
         );
-        
+
        dbms_output.put_line('扩展顺序一 ：'||to_char(sysdate,'yyyy-mm-dd hh24:mi:ss'));
-       
-          ----顺序二：扩展物料主数据------
+
+         ----顺序二：扩展后继物料主数据------
         v_werks := '1806';
-        v_beskz := 'F'; 
+        v_beskz := 'F';
         v_sbdkz := '1';
         v_berid := 'NMRP_1806';
         v_dispr := 'SS01';
@@ -146,47 +162,31 @@ begin
        v_pbompkgid, fromid, mtart, extwg, matkl, groes, spart, oldno, maktx, tdline, zind, unit, zvariant,
        zmaktx, zsize, ztype, zcolor, zbranch, zauth, zrohs, zpackage, zpaper, zversion, zmanual, mstae,
        mtpos, v_werks, classnum, classtype, numerator, denominatr, bstme, xchpf, kordb, ekgrp, ztdline1, vkorg, vtweg, ktgrm, aland,
-       tatyp, taxkm, mtpos1, tragr, ladgr, ztdline2, dismm, dispo, disls, bstrf, bstmi, v_berid, v_dispr, v_beskz, sobsl, rgekm, lgfsb,
+       tatyp, taxkm, mtpos1, tragr, ladgr, ztdline2, dismm, dispo, disls,null as bstrf,null as bstmi, v_berid, v_dispr, v_beskz, sobsl, rgekm, lgfsb,
        lgpro, dzeit, plifz, webaz, fhori, eisbe, perkz, strgr, vrmod, vint1, vint2, miskz, mtvfp, kzaus, nfmat, v_sbdkz, fevor, co_prodprf,
        mhdrz, mhdhb, loggr, lgnum, ltkze, qmatv, qpart, qmata, ssqss, ztdline3, bklas, eklas, qklas, mlast, peinh, vprsv, losgr, awsls, hrkft,
        prctr, ekalr, hkmat, sobsk, zplp3, zpld3, sipm91id, sipm94id, sipm95id, sipm96id, sipm97id, sipm98id, ztime1, zdate, ztime2, zmsgtp2,
-       zmestx, prfrq, ausch,2,werks
-       from ( select * from TEMP_WK_PARTLIB
-              union                 
-              select a1.* from sipm190_last  a1
-              inner join (select * from pbomlib where pbompkgid=v_pbompkgid) t1
-              on a1.werks=t1.werks and (a1.no = t1.pno or a1.no = t1.cno)
-              and not exists(
-              select 1 from (select * from TEMP_WK_PARTLIB) t 
-              where a1.no=t.no and a1.werks=t.werks)
-              ) t
-
+       zmestx, prfrq, ausch,1,werks
+       from TEMP_WK_MATLIB t
         where id in
-       ( select id from (select max(t1.id) id, t1.no, t1.werks, t1.beskz, t1.sobsl,t1.sbdkz
-                           from  ( select * from TEMP_WK_PARTLIB
-              union                 
-              select a1.* from sipm190_last  a1
-              inner join (select * from pbomlib where pbompkgid=v_pbompkgid) t1
-              on a1.werks=t1.werks and (a1.no = t1.pno or a1.no = t1.cno)
-              and not exists(
-              select 1 from (select * from TEMP_WK_PARTLIB) t 
-              where a1.no=t.no and a1.werks=t.werks)
-                                    
-                                    ) t1
-                                    where t1.werks in ('1001','1801')
-                                    group by t1.no, t1.werks, t1.beskz, t1.sobsl,t1.sbdkz) t
-             where t.werks='1001' and t.beskz='F' and t.sbdkz='1'  and t.sobsl is null and t.no in ---筛选条件二
-             (select pno as matnr from pbomlib where pbompkgid=v_pbompkgid and werks in ('1001','1801') group by pno
-               union
-               select cno as matnr from pbomlib where pbompkgid=v_pbompkgid and werks in ('1001','1801') group by cno
+       ( select id from (
+                select max(t1.id) id, t1.no, t1.werks, t1.beskz, t1.sobsl,t1.sbdkz
+                from TEMP_WK_MATLIB t1
+                 where t1.werks in ('1001','1801')
+                 group by t1.no, t1.werks, t1.beskz, t1.sobsl,t1.sbdkz
+                 ) t
+         where t.werks='1001' and t.beskz='F' and t.sbdkz='1' and t.sobsl is null and t.no in  ---筛选条件二
+             (
+              select NFMAT from SIPM170 where pbompkgid=v_pbompkgid and nfwerks in ('1001','1801') group by NFMAT
               )
               and no not in (select no from SIPM170 where pbompkgid=v_pbompkgid group by no)
         );
+        
        dbms_output.put_line('扩展顺序二 ：'||to_char(sysdate,'yyyy-mm-dd hh24:mi:ss'));
-       
-       ----顺序三：扩展物料主数据------
+
+       ----顺序三：扩展后继物料主数据------
         v_werks := '1806';
-        v_beskz := 'F'; 
+        v_beskz := 'F';
         v_sbdkz := '2';
         v_berid := 'NMRP_1806';
         v_dispr := 'SS01';
@@ -212,43 +212,26 @@ begin
        lgpro, dzeit, plifz, webaz, fhori, eisbe, perkz, strgr, vrmod, vint1, vint2, miskz, mtvfp, kzaus, nfmat, v_sbdkz, fevor, co_prodprf,
        mhdrz, mhdhb, loggr, lgnum, ltkze, qmatv, qpart, qmata, ssqss, ztdline3, bklas, eklas, qklas, mlast, peinh, vprsv, losgr, awsls, hrkft,
        prctr, ekalr, hkmat, sobsk, zplp3, zpld3, sipm91id, sipm94id, sipm95id, sipm96id, sipm97id, sipm98id, ztime1, zdate, ztime2, zmsgtp2,
-       zmestx, prfrq, ausch ,2,werks
-       from ( select * from TEMP_WK_PARTLIB
-              union                 
-              select a1.* from sipm190_last  a1
-              inner join (select * from pbomlib where pbompkgid=v_pbompkgid) t1
-              on a1.werks=t1.werks and (a1.no = t1.pno or a1.no = t1.cno)
-              and not exists(
-              select 1 from (select * from TEMP_WK_PARTLIB) t 
-              where a1.no=t.no and a1.werks=t.werks)
-              ) t
-
+       zmestx, prfrq, ausch ,1,werks
+       from TEMP_WK_MATLIB t
         where id in
-       ( select id from (select max(t1.id) id, t1.no, t1.werks, t1.beskz, t1.sobsl,t1.sbdkz
-                           from  ( select * from TEMP_WK_PARTLIB
-              union                 
-              select a1.* from sipm190_last  a1
-              inner join (select * from pbomlib where pbompkgid=v_pbompkgid) t1
-              on a1.werks=t1.werks and (a1.no = t1.pno or a1.no = t1.cno)
-              and not exists(
-              select 1 from (select * from TEMP_WK_PARTLIB) t 
-              where a1.no=t.no and a1.werks=t.werks)
-                                    
-                                    ) t1
-                                    where t1.werks in ('1001','1801')
-                                    group by t1.no, t1.werks, t1.beskz, t1.sobsl,t1.sbdkz) t
-             where t.werks='1001' and t.beskz='E' and t.sbdkz='-2'  and t.sobsl is null and t.no in ---筛选条件三
-             (select pno as matnr from pbomlib where pbompkgid=v_pbompkgid and werks in ('1001','1801') group by pno
-               union
-               select cno as matnr from pbomlib where pbompkgid=v_pbompkgid and werks in ('1001','1801') group by cno
+       ( select id from (
+                select max(t1.id) id, t1.no, t1.werks, t1.beskz, t1.sobsl,t1.sbdkz
+                from  TEMP_WK_MATLIB t1
+                 where t1.werks in ('1001','1801')
+                 group by t1.no, t1.werks, t1.beskz, t1.sobsl,t1.sbdkz
+                 ) t
+         where t.werks='1001' and t.beskz='E' and t.sbdkz='2' and t.sobsl is null and t.no in  ---筛选条件三
+             (
+              select NFMAT from SIPM170 where pbompkgid=v_pbompkgid and nfwerks in ('1001','1801') group by NFMAT
               )
               and no not in (select no from SIPM170 where pbompkgid=v_pbompkgid group by no)
         );
        dbms_output.put_line('扩展顺序三 ：'||to_char(sysdate,'yyyy-mm-dd hh24:mi:ss'));
-       
-          ----顺序四：扩展物料主数据------
+
+          ----顺序四：扩展后继物料主数据------
         v_werks := '1806';
-        v_beskz := 'E'; 
+        v_beskz := 'E';
         v_sbdkz := '2';
         v_berid := 'NMRP_1806';
         v_dispr := 'SS01';
@@ -274,106 +257,26 @@ begin
        lgpro, dzeit, plifz, webaz, fhori, eisbe, perkz, strgr, vrmod, vint1, vint2, miskz, mtvfp, kzaus, nfmat, v_sbdkz, fevor, co_prodprf,
        mhdrz, mhdhb, loggr, lgnum, ltkze, qmatv, qpart, qmata, ssqss, ztdline3, bklas, eklas, qklas, mlast, peinh, vprsv, losgr, awsls, hrkft,
        prctr, ekalr, hkmat, sobsk, zplp3, zpld3, sipm91id, sipm94id, sipm95id, sipm96id, sipm97id, sipm98id, ztime1, zdate, ztime2, zmsgtp2,
-       zmestx, prfrq, ausch,2,werks
-       from ( select * from TEMP_WK_PARTLIB
-              union                 
-              select a1.* from sipm190_last  a1
-              inner join (select * from pbomlib where pbompkgid=v_pbompkgid) t1
-              on a1.werks=t1.werks and (a1.no = t1.pno or a1.no = t1.cno)
-              and not exists(
-              select 1 from (select * from TEMP_WK_PARTLIB) t 
-              where a1.no=t.no and a1.werks=t.werks)
-              ) t
-
+       zmestx, prfrq, ausch,1,werks
+       from TEMP_WK_MATLIB t
         where id in
-       ( select id from (select max(t1.id) id, t1.no, t1.werks, t1.beskz, t1.sobsl,t1.sbdkz
-                           from  ( select * from TEMP_WK_PARTLIB
-              union                 
-              select a1.* from sipm190_last  a1
-              inner join (select * from pbomlib where pbompkgid=v_pbompkgid) t1
-              on a1.werks=t1.werks and (a1.no = t1.pno or a1.no = t1.cno)
-              and not exists(
-              select 1 from (select * from TEMP_WK_PARTLIB) t 
-              where a1.no=t.no and a1.werks=t.werks)
-                                    
-                                    ) t1
-                                    where t1.werks in ('1001','1801')
-                                    group by t1.no, t1.werks, t1.beskz, t1.sobsl,t1.sbdkz) t
-             where t.werks='1001' and t.beskz='E' and t.sbdkz='-2'  and t.sobsl='50'  ---筛选条件四
-             and t.no in 
-             (select pno as matnr from pbomlib where pbompkgid=v_pbompkgid and werks in ('1001','1801') group by pno
-               union
-               select cno as matnr from pbomlib where pbompkgid=v_pbompkgid and werks in ('1001','1801') group by cno
+       ( select id from (
+                select max(t1.id) id, t1.no, t1.werks, t1.beskz, t1.sobsl,t1.sbdkz
+                from  TEMP_WK_MATLIB t1
+                 where t1.werks in ('1001','1801')
+                 group by t1.no, t1.werks, t1.beskz, t1.sobsl,t1.sbdkz
+                 ) t
+         where t.werks='1001' and t.beskz='E' and t.sbdkz='2' and t.sobsl = '50' and t.no in  ---筛选条件四
+             (
+              select NFMAT from SIPM170 where pbompkgid=v_pbompkgid and nfwerks in ('1001','1801') group by NFMAT
               )
               and no not in (select no from SIPM170 where pbompkgid=v_pbompkgid group by no)
         );
        dbms_output.put_line('扩展顺序四 ：'||to_char(sysdate,'yyyy-mm-dd hh24:mi:ss'));
-       
-        ----顺序五：扩展物料主数据------
-        v_werks := '1806';
-        v_beskz := 'F'; 
-        v_sbdkz := '2';
-        v_berid := 'NMRP_1806';
-        v_dispr := 'SS01';
-       insert into SIPM170 (id,publishtn, publishid, stn, sid, syncbatchno, syncdataitemno, syncuser, synctime, syncresult, syncmsg,
-       needsyncsign, fmaterialid, del, msym, wkaid, designno, bldesignno, no, name, ver, ptype, ename,
-       creator, ctime, muser, mtime, chkusr, chktime, duser, deltime, alteruser, owner, state, smemo,
-       pbompkgid, fromid, mtart, extwg, matkl, groes, spart, oldno, maktx, tdline, zind, unit, zvariant,
-       zmaktx, zsize, ztype, zcolor, zbranch, zauth, zrohs, zpackage, zpaper, zversion, zmanual, mstae,
-       mtpos, werks, classnum, classtype, numerator, denominatr, bstme, xchpf, kordb, ekgrp, ztdline1, vkorg, vtweg, ktgrm, aland,
-       tatyp, taxkm, mtpos1, tragr, ladgr, ztdline2, dismm, dispo, disls, bstrf, bstmi, berid, dispr, beskz, sobsl, rgekm, lgfsb,
-       lgpro, dzeit, plifz, webaz, fhori, eisbe, perkz, strgr, vrmod, vint1, vint2, miskz, mtvfp, kzaus, nfmat, sbdkz, fevor, co_prodprf,
-       mhdrz, mhdhb, loggr, lgnum, ltkze, qmatv, qpart, qmata, ssqss, ztdline3, bklas, eklas, qklas, mlast, peinh, vprsv, losgr, awsls, hrkft,
-       prctr, ekalr, hkmat, sobsk, zplp3, zpld3, sipm91id, sipm94id, sipm95id, sipm96id, sipm97id, sipm98id, ztime1, zdate, ztime2, zmsgtp2,
-       zmestx, prfrq, ausch ,ordernum ,nfwerks)
-       select   '01_'||SYS_GUID(),publishtn, publishid, stn, sid, syncbatchno, syncdataitemno, syncuser, synctime, syncresult, syncmsg,
-       needsyncsign, fmaterialid, del, msym, wkaid, designno, bldesignno, no, name, ver, ptype, ename,
-       v_operator, ctime, muser, mtime, chkusr, chktime, duser, deltime, alteruser, v_operator, state, smemo,
-       v_pbompkgid, fromid, mtart, extwg, matkl, groes, spart, oldno, maktx, tdline, zind, unit, zvariant,
-       zmaktx, zsize, ztype, zcolor, zbranch, zauth, zrohs, zpackage, zpaper, zversion, zmanual, mstae,
-       mtpos, v_werks, classnum, classtype, numerator, denominatr, bstme, xchpf, kordb, ekgrp, ztdline1, vkorg, vtweg, ktgrm, aland,
-       tatyp, taxkm, mtpos1, tragr, ladgr, ztdline2, dismm, dispo, disls, bstrf, bstmi, v_berid, v_dispr, v_beskz, sobsl, rgekm, lgfsb,
-       lgpro, dzeit, plifz, webaz, fhori, eisbe, perkz, strgr, vrmod, vint1, vint2, miskz, mtvfp, kzaus, nfmat, v_sbdkz, fevor, co_prodprf,
-       mhdrz, mhdhb, loggr, lgnum, ltkze, qmatv, qpart, qmata, ssqss, ztdline3, bklas, eklas, qklas, mlast, peinh, vprsv, losgr, awsls, hrkft,
-       prctr, ekalr, hkmat, sobsk, zplp3, zpld3, sipm91id, sipm94id, sipm95id, sipm96id, sipm97id, sipm98id, ztime1, zdate, ztime2, zmsgtp2,
-       zmestx, prfrq, ausch,2,werks--row_number() over(order by NFMAT desc)
-       from ( select * from TEMP_WK_PARTLIB
-              union                 
-              select a1.* from sipm190_last  a1
-              inner join (select * from pbomlib where pbompkgid=v_pbompkgid) t1
-              on a1.werks=t1.werks and (a1.no = t1.pno or a1.no = t1.cno)
-              and not exists(
-              select 1 from (select * from TEMP_WK_PARTLIB) t 
-              where a1.no=t.no and a1.werks=t.werks)
-              ) t
 
-        where id in
-       ( select id from (select max(t1.id) id, t1.no, t1.werks, t1.beskz, t1.sobsl,t1.sbdkz
-                           from  ( select * from TEMP_WK_PARTLIB
-              union                 
-              select a1.* from sipm190_last  a1
-              inner join (select * from pbomlib where pbompkgid=v_pbompkgid) t1
-              on a1.werks=t1.werks and (a1.no = t1.pno or a1.no = t1.cno)
-              and not exists(
-              select 1 from (select * from TEMP_WK_PARTLIB) t 
-              where a1.no=t.no and a1.werks=t.werks)
-                                    
-                                    ) t1
-                                    where t1.werks in ('1001','1801')
-                                    group by t1.no, t1.werks, t1.beskz, t1.sobsl,t1.sbdkz) t
-             where t.werks='1801' and t.beskz='E' and t.sbdkz='2' ---筛选条件五
-             and t.no in 
-             (select pno as matnr from pbomlib where pbompkgid=v_pbompkgid and werks in ('1001','1801') group by pno
-               union
-               select cno as matnr from pbomlib where pbompkgid=v_pbompkgid and werks in ('1001','1801') group by cno
-              )
-              and no not in (select no from SIPM170 where pbompkgid=v_pbompkgid group by no)
-        );
-       dbms_output.put_line('扩展顺序五 ：'||to_char(sysdate,'yyyy-mm-dd hh24:mi:ss'));
-       
-       ----顺序六：扩展物料主数据------
+        ----顺序五：扩展后继物料主数据------
         v_werks := '1806';
-        v_beskz := 'F'; 
+        v_beskz := 'F';
         v_sbdkz := '2';
         v_berid := 'NMRP_1806';
         v_dispr := 'SS01';
@@ -395,49 +298,76 @@ begin
        v_pbompkgid, fromid, mtart, extwg, matkl, groes, spart, oldno, maktx, tdline, zind, unit, zvariant,
        zmaktx, zsize, ztype, zcolor, zbranch, zauth, zrohs, zpackage, zpaper, zversion, zmanual, mstae,
        mtpos, v_werks, classnum, classtype, numerator, denominatr, bstme, xchpf, kordb, ekgrp, ztdline1, vkorg, vtweg, ktgrm, aland,
-       tatyp, taxkm, mtpos1, tragr, ladgr, ztdline2, dismm, dispo, disls, bstrf, bstmi, v_berid, v_dispr, v_beskz, v_sobsl, rgekm, lgfsb,
+       tatyp, taxkm, mtpos1, tragr, ladgr, ztdline2, dismm, dispo, disls,null as bstrf,null as bstmi, v_berid, v_dispr, v_beskz, v_sobsl, rgekm, lgfsb,
        lgpro, dzeit, plifz, webaz, fhori, eisbe, perkz, strgr, vrmod, vint1, vint2, miskz, mtvfp, kzaus, nfmat, v_sbdkz, fevor, co_prodprf,
        mhdrz, mhdhb, loggr, lgnum, ltkze, qmatv, qpart, qmata, ssqss, ztdline3, bklas, eklas, qklas, mlast, peinh, vprsv, losgr, awsls, hrkft,
        prctr, ekalr, hkmat, sobsk, zplp3, zpld3, sipm91id, sipm94id, sipm95id, sipm96id, sipm97id, sipm98id, ztime1, zdate, ztime2, zmsgtp2,
-       zmestx, prfrq, ausch,2,werks--row_number() over(order by NFMAT desc)
-       from ( select * from TEMP_WK_PARTLIB
-              union                 
-              select a1.* from sipm190_last  a1
-              inner join (select * from pbomlib where pbompkgid=v_pbompkgid) t1
-              on a1.werks=t1.werks and (a1.no = t1.pno or a1.no = t1.cno)
-              and not exists(
-              select 1 from (select * from TEMP_WK_PARTLIB) t 
-              where a1.no=t.no and a1.werks=t.werks)
-              
-              ) t
-
+       zmestx, prfrq, ausch,1,werks--row_number() over(order by NFMAT desc)
+        from TEMP_WK_MATLIB t
         where id in
-       ( select id from (select max(t1.id) id, t1.no, t1.werks, t1.beskz, t1.sobsl,t1.sbdkz
-                           from  ( select * from TEMP_WK_PARTLIB
-              union                 
-              select a1.* from sipm190_last  a1
-              inner join (select * from pbomlib where pbompkgid=v_pbompkgid) t1
-              on a1.werks=t1.werks and (a1.no = t1.pno or a1.no = t1.cno)
-              and not exists(
-              select 1 from (select * from TEMP_WK_PARTLIB) t 
-              where a1.no=t.no and a1.werks=t.werks)
-                                    
-                                    ) t1
-                                    where t1.werks in ('1001','1801')
-                                    group by t1.no, t1.werks, t1.beskz, t1.sobsl,t1.sbdkz) t
-             where t.werks='1801' and t.beskz='F' and t.sbdkz='2' and t.sobsl is null---筛选条件六
-             and t.no in 
-             (select pno as matnr from pbomlib where pbompkgid=v_pbompkgid and werks in ('1001','1801') group by pno
-               union
-               select cno as matnr from pbomlib where pbompkgid=v_pbompkgid and werks in ('1001','1801') group by cno
+       ( select id from (
+                select max(t1.id) id, t1.no, t1.werks, t1.beskz, t1.sobsl,t1.sbdkz
+                from  TEMP_WK_MATLIB t1
+                 where t1.werks in ('1001','1801')
+                 group by t1.no, t1.werks, t1.beskz, t1.sobsl,t1.sbdkz
+                 ) t
+         where t.werks='1001' and t.beskz='F' and t.sbdkz='2' and t.sobsl='Z1' ---筛选条件五
+              and t.no in  
+             (
+              select NFMAT from SIPM170 where pbompkgid=v_pbompkgid and nfwerks in ('1001','1801') group by NFMAT
+              )
+              and no not in (select no from SIPM170 where pbompkgid=v_pbompkgid group by no)
+        );
+       dbms_output.put_line('扩展顺序五 ：'||to_char(sysdate,'yyyy-mm-dd hh24:mi:ss'));
+
+       ----顺序六：扩展后继物料主数据------
+        v_werks := '1806';
+        v_beskz := 'F';
+        v_sbdkz := '2';
+        v_berid := 'NMRP_1806';
+        v_dispr := 'SS01';
+        v_sobsl := 'Y8';
+       insert into SIPM170 (id,publishtn, publishid, stn, sid, syncbatchno, syncdataitemno, syncuser, synctime, syncresult, syncmsg,
+       needsyncsign, fmaterialid, del, msym, wkaid, designno, bldesignno, no, name, ver, ptype, ename,
+       creator, ctime, muser, mtime, chkusr, chktime, duser, deltime, alteruser, owner, state, smemo,
+       pbompkgid, fromid, mtart, extwg, matkl, groes, spart, oldno, maktx, tdline, zind, unit, zvariant,
+       zmaktx, zsize, ztype, zcolor, zbranch, zauth, zrohs, zpackage, zpaper, zversion, zmanual, mstae,
+       mtpos, werks, classnum, classtype, numerator, denominatr, bstme, xchpf, kordb, ekgrp, ztdline1, vkorg, vtweg, ktgrm, aland,
+       tatyp, taxkm, mtpos1, tragr, ladgr, ztdline2, dismm, dispo, disls, bstrf, bstmi, berid, dispr, beskz, sobsl, rgekm, lgfsb,
+       lgpro, dzeit, plifz, webaz, fhori, eisbe, perkz, strgr, vrmod, vint1, vint2, miskz, mtvfp, kzaus, nfmat, sbdkz, fevor, co_prodprf,
+       mhdrz, mhdhb, loggr, lgnum, ltkze, qmatv, qpart, qmata, ssqss, ztdline3, bklas, eklas, qklas, mlast, peinh, vprsv, losgr, awsls, hrkft,
+       prctr, ekalr, hkmat, sobsk, zplp3, zpld3, sipm91id, sipm94id, sipm95id, sipm96id, sipm97id, sipm98id, ztime1, zdate, ztime2, zmsgtp2,
+       zmestx, prfrq, ausch ,ordernum ,nfwerks)
+       select   '01_'||SYS_GUID(),publishtn, publishid, stn, sid, syncbatchno, syncdataitemno, syncuser, synctime, syncresult, syncmsg,
+       needsyncsign, fmaterialid, del, msym, wkaid, designno, bldesignno, no, name, ver, ptype, ename,
+       v_operator, ctime, muser, mtime, chkusr, chktime, duser, deltime, alteruser, v_operator, state, smemo,
+       v_pbompkgid, fromid, mtart, extwg, matkl, groes, spart, oldno, maktx, tdline, zind, unit, zvariant,
+       zmaktx, zsize, ztype, zcolor, zbranch, zauth, zrohs, zpackage, zpaper, zversion, zmanual, mstae,
+       mtpos, v_werks, classnum, classtype, numerator, denominatr, bstme, xchpf, kordb, ekgrp, ztdline1, vkorg, vtweg, ktgrm, aland,
+       tatyp, taxkm, mtpos1, tragr, ladgr, ztdline2, dismm, dispo, disls,null as bstrf,null as bstmi, v_berid, v_dispr, v_beskz, v_sobsl, rgekm, lgfsb,
+       lgpro, dzeit, plifz, webaz, fhori, eisbe, perkz, strgr, vrmod, vint1, vint2, miskz, mtvfp, kzaus, nfmat, v_sbdkz, fevor, co_prodprf,
+       mhdrz, mhdhb, loggr, lgnum, ltkze, qmatv, qpart, qmata, ssqss, ztdline3, bklas, eklas, qklas, mlast, peinh, vprsv, losgr, awsls, hrkft,
+       prctr, ekalr, hkmat, sobsk, zplp3, zpld3, sipm91id, sipm94id, sipm95id, sipm96id, sipm97id, sipm98id, ztime1, zdate, ztime2, zmsgtp2,
+       zmestx, prfrq, ausch,1,werks--row_number() over(order by NFMAT desc)
+      from TEMP_WK_MATLIB t
+        where id in
+       ( select id from (
+                select max(t1.id) id, t1.no, t1.werks, t1.beskz, t1.sobsl,t1.sbdkz
+                from  TEMP_WK_MATLIB t1
+                 where t1.werks in ('1001','1801')
+                 group by t1.no, t1.werks, t1.beskz, t1.sobsl,t1.sbdkz
+                 ) t
+         where t.werks='1801' and t.beskz='F' and t.sbdkz='2' and t.no in  ---筛选条件六
+             (
+              select NFMAT from SIPM170 where pbompkgid=v_pbompkgid and nfwerks in ('1001','1801') group by NFMAT
               )
               and no not in (select no from SIPM170 where pbompkgid=v_pbompkgid group by no)
         );
        dbms_output.put_line('扩展顺序六 ：'||to_char(sysdate,'yyyy-mm-dd hh24:mi:ss'));
-       
-             ----顺序七：扩展物料主数据------
+
+             ----顺序七：扩展后继物料主数据------
         v_werks := '1806';
-        v_beskz := 'F'; 
+        v_beskz := 'F';
         v_sbdkz := '2';
         v_berid := 'NMRP_1806';
         v_dispr := 'SS01';
@@ -459,48 +389,30 @@ begin
        v_pbompkgid, fromid, mtart, extwg, matkl, groes, spart, oldno, maktx, tdline, zind, unit, zvariant,
        zmaktx, zsize, ztype, zcolor, zbranch, zauth, zrohs, zpackage, zpaper, zversion, zmanual, mstae,
        mtpos, v_werks, classnum, classtype, numerator, denominatr, bstme, xchpf, kordb, ekgrp, ztdline1, vkorg, vtweg, ktgrm, aland,
-       tatyp, taxkm, mtpos1, tragr, ladgr, ztdline2, dismm, dispo, disls, bstrf, bstmi, v_berid, v_dispr, v_beskz, v_sobsl, rgekm, lgfsb,
+       tatyp, taxkm, mtpos1, tragr, ladgr, ztdline2, dismm, dispo, disls,null as bstrf,null as bstmi, v_berid, v_dispr, v_beskz, v_sobsl, rgekm, lgfsb,
        lgpro, dzeit, plifz, webaz, fhori, eisbe, perkz, strgr, vrmod, vint1, vint2, miskz, mtvfp, kzaus, nfmat, v_sbdkz, fevor, co_prodprf,
        mhdrz, mhdhb, loggr, lgnum, ltkze, qmatv, qpart, qmata, ssqss, ztdline3, bklas, eklas, qklas, mlast, peinh, vprsv, losgr, awsls, hrkft,
        prctr, ekalr, hkmat, sobsk, zplp3, zpld3, sipm91id, sipm94id, sipm95id, sipm96id, sipm97id, sipm98id, ztime1, zdate, ztime2, zmsgtp2,
-       zmestx, prfrq, ausch,2,werks--row_number() over(order by NFMAT desc) -----排序----
-       from ( select * from TEMP_WK_PARTLIB
-              union                 
-              select a1.* from sipm190_last  a1
-              inner join (select * from pbomlib where pbompkgid=v_pbompkgid) t1
-              on a1.werks=t1.werks and (a1.no = t1.pno or a1.no = t1.cno)
-              and not exists(
-              select 1 from (select * from TEMP_WK_PARTLIB) t 
-              where a1.no=t.no and a1.werks=t.werks)
-              ) t
-
+       zmestx, prfrq, ausch,1,werks--row_number() over(order by NFMAT desc) -----排序----
+      from TEMP_WK_MATLIB t
         where id in
-       ( select id from (select max(t1.id) id, t1.no, t1.werks, t1.beskz, t1.sobsl,t1.sbdkz
-                           from  ( select * from TEMP_WK_PARTLIB
-              union                 
-              select a1.* from sipm190_last  a1
-              inner join (select * from pbomlib where pbompkgid=v_pbompkgid) t1
-              on a1.werks=t1.werks and (a1.no = t1.pno or a1.no = t1.cno)
-              and not exists(
-              select 1 from (select * from TEMP_WK_PARTLIB) t 
-              where a1.no=t.no and a1.werks=t.werks)
-                                    
-                                    ) t1
-                                    where t1.werks in ('1001','1801')
-                                    group by t1.no, t1.werks, t1.beskz, t1.sobsl,t1.sbdkz) t
-             where t.werks='1001' and t.beskz='F' and t.sbdkz='2' and t.sobsl is null---筛选条件七
-             and t.no in 
-             (select pno as matnr from pbomlib where pbompkgid=v_pbompkgid and werks in ('1001','1801') group by pno
-               union
-               select cno as matnr from pbomlib where pbompkgid=v_pbompkgid and werks in ('1001','1801') group by cno
+       ( select id from (
+                select max(t1.id) id, t1.no, t1.werks, t1.beskz, t1.sobsl,t1.sbdkz
+                from  TEMP_WK_MATLIB t1
+                 where t1.werks in ('1001','1801')
+                 group by t1.no, t1.werks, t1.beskz, t1.sobsl,t1.sbdkz
+                 ) t
+         where t.werks='1001' and t.beskz='F' and t.sbdkz='2' and t.sobsl is null and t.no in  ---筛选条件七
+             (
+              select NFMAT from SIPM170 where pbompkgid=v_pbompkgid and nfwerks in ('1001','1801') group by NFMAT
               )
               and no not in (select no from SIPM170 where pbompkgid=v_pbompkgid group by no)
         );
        dbms_output.put_line('扩展顺序七 ：'||to_char(sysdate,'yyyy-mm-dd hh24:mi:ss'));
-       
-        ----顺序八：扩展物料主数据------
+
+        ----顺序八：扩展后继物料主数据------
         v_werks := '1806';
-        v_beskz := 'F'; 
+        v_beskz := 'F';
         v_sbdkz := '2';
         v_berid := 'NMRP_1806';
         v_dispr := 'SS01';
@@ -522,48 +434,30 @@ begin
        v_pbompkgid, fromid, mtart, extwg, matkl, groes, spart, oldno, maktx, tdline, zind, unit, zvariant,
        zmaktx, zsize, ztype, zcolor, zbranch, zauth, zrohs, zpackage, zpaper, zversion, zmanual, mstae,
        mtpos, v_werks, classnum, classtype, numerator, denominatr, bstme, xchpf, kordb, ekgrp, ztdline1, vkorg, vtweg, ktgrm, aland,
-       tatyp, taxkm, mtpos1, tragr, ladgr, ztdline2, dismm, dispo, disls, bstrf, bstmi, v_berid, v_dispr, v_beskz, v_sobsl, rgekm, lgfsb,
+       tatyp, taxkm, mtpos1, tragr, ladgr, ztdline2, dismm, dispo, disls,null as bstrf,null as bstmi, v_berid, v_dispr, v_beskz, v_sobsl, rgekm, lgfsb,
        lgpro, dzeit, plifz, webaz, fhori, eisbe, perkz, strgr, vrmod, vint1, vint2, miskz, mtvfp, kzaus, nfmat, v_sbdkz, fevor, co_prodprf,
        mhdrz, mhdhb, loggr, lgnum, ltkze, qmatv, qpart, qmata, ssqss, ztdline3, bklas, eklas, qklas, mlast, peinh, vprsv, losgr, awsls, hrkft,
        prctr, ekalr, hkmat, sobsk, zplp3, zpld3, sipm91id, sipm94id, sipm95id, sipm96id, sipm97id, sipm98id, ztime1, zdate, ztime2, zmsgtp2,
-       zmestx, prfrq, ausch,2,werks--row_number() over(order by NFMAT desc)
-       from ( select * from TEMP_WK_PARTLIB
-              union                 
-              select a1.* from sipm190_last  a1
-              inner join (select * from pbomlib where pbompkgid=v_pbompkgid) t1
-              on a1.werks=t1.werks and (a1.no = t1.pno or a1.no = t1.cno)
-              and not exists(
-              select 1 from (select * from TEMP_WK_PARTLIB) t 
-              where a1.no=t.no and a1.werks=t.werks)
-              ) t
-
+       zmestx, prfrq, ausch,1,werks--row_number() over(order by NFMAT desc)
+      from TEMP_WK_MATLIB t
         where id in
-       ( select id from (select max(t1.id) id, t1.no, t1.werks, t1.beskz, t1.sobsl,t1.sbdkz
-                           from  ( select * from TEMP_WK_PARTLIB
-              union                 
-              select a1.* from sipm190_last  a1
-              inner join (select * from pbomlib where pbompkgid=v_pbompkgid) t1
-              on a1.werks=t1.werks and (a1.no = t1.pno or a1.no = t1.cno)
-              and not exists(
-              select 1 from (select * from TEMP_WK_PARTLIB) t 
-              where a1.no=t.no and a1.werks=t.werks)
-                                    
-                                    ) t1
-                                    where t1.werks in ('1001','1801')
-                                    group by t1.no, t1.werks, t1.beskz, t1.sobsl,t1.sbdkz) t
-             where t.werks='1001' and t.beskz='F' and t.sbdkz='2' and t.sobsl='Z5'---筛选条件八
-             and t.no in 
-             (select pno as matnr from pbomlib where pbompkgid=v_pbompkgid and werks in ('1001','1801') group by pno
-               union
-               select cno as matnr from pbomlib where pbompkgid=v_pbompkgid and werks in ('1001','1801') group by cno
+       ( select id from (
+                select max(t1.id) id, t1.no, t1.werks, t1.beskz, t1.sobsl,t1.sbdkz
+                from  TEMP_WK_MATLIB t1
+                 where t1.werks in ('1001','1801')
+                 group by t1.no, t1.werks, t1.beskz, t1.sobsl,t1.sbdkz
+                 ) t
+         where t.werks='1001' and t.beskz='F' and t.sbdkz='2' and t.sobsl='Z5' and t.no in  ---筛选条件八
+             (
+              select NFMAT from SIPM170 where pbompkgid=v_pbompkgid and nfwerks in ('1001','1801') group by NFMAT
               )
               and no not in (select no from SIPM170 where pbompkgid=v_pbompkgid group by no)
         );
        dbms_output.put_line('扩展顺序八 ：'||to_char(sysdate,'yyyy-mm-dd hh24:mi:ss'));
-       
-       ----顺序九：扩展物料主数据------
+
+       ----顺序九：扩展后继物料主数据------
         v_werks := '1806';
-        v_beskz := 'F'; 
+        v_beskz := 'F';
         v_sbdkz := '2';
         v_berid := 'NMRP_1806';
         v_dispr := 'SS01';
@@ -585,46 +479,28 @@ begin
        v_pbompkgid, fromid, mtart, extwg, matkl, groes, spart, oldno, maktx, tdline, zind, unit, zvariant,
        zmaktx, zsize, ztype, zcolor, zbranch, zauth, zrohs, zpackage, zpaper, zversion, zmanual, mstae,
        mtpos, v_werks, classnum, classtype, numerator, denominatr, bstme, xchpf, kordb, ekgrp, ztdline1, vkorg, vtweg, ktgrm, aland,
-       tatyp, taxkm, mtpos1, tragr, ladgr, ztdline2, dismm, dispo, disls, bstrf, bstmi, v_berid, v_dispr, v_beskz, v_sobsl, rgekm, lgfsb,
+       tatyp, taxkm, mtpos1, tragr, ladgr, ztdline2, dismm, dispo, disls,null as bstrf,null as bstmi, v_berid, v_dispr, v_beskz, v_sobsl, rgekm, lgfsb,
        lgpro, dzeit, plifz, webaz, fhori, eisbe, perkz, strgr, vrmod, vint1, vint2, miskz, mtvfp, kzaus, nfmat, v_sbdkz, fevor, co_prodprf,
        mhdrz, mhdhb, loggr, lgnum, ltkze, qmatv, qpart, qmata, ssqss, ztdline3, bklas, eklas, qklas, mlast, peinh, vprsv, losgr, awsls, hrkft,
        prctr, ekalr, hkmat, sobsk, zplp3, zpld3, sipm91id, sipm94id, sipm95id, sipm96id, sipm97id, sipm98id, ztime1, zdate, ztime2, zmsgtp2,
-       zmestx, prfrq, ausch,2,werks
-       from ( select * from TEMP_WK_PARTLIB
-              union                 
-              select a1.* from sipm190_last  a1
-              inner join (select * from pbomlib where pbompkgid=v_pbompkgid) t1
-              on a1.werks=t1.werks and (a1.no = t1.pno or a1.no = t1.cno)
-              and not exists(
-              select 1 from (select * from TEMP_WK_PARTLIB) t 
-              where a1.no=t.no and a1.werks=t.werks)
-              ) t
-
+       zmestx, prfrq, ausch,1,werks
+      from TEMP_WK_MATLIB t
         where id in
-       ( select id from (select max(t1.id) id, t1.no, t1.werks, t1.beskz, t1.sobsl,t1.sbdkz
-                           from  ( select * from TEMP_WK_PARTLIB
-              union                 
-              select a1.* from sipm190_last  a1
-              inner join (select * from pbomlib where pbompkgid=v_pbompkgid) t1
-              on a1.werks=t1.werks and (a1.no = t1.pno or a1.no = t1.cno)
-              and not exists(
-              select 1 from (select * from TEMP_WK_PARTLIB) t 
-              where a1.no=t.no and a1.werks=t.werks)
-                                    
-                                    ) t1
-                                    where t1.werks in ('1001','1801')
-                                    group by t1.no, t1.werks, t1.beskz, t1.sobsl,t1.sbdkz) t
-             where t.werks='1001' and t.beskz='F' and t.sbdkz='2' and t.sobsl='Z7'---筛选条件九
-             and t.no in 
-             (select pno as matnr from pbomlib where pbompkgid=v_pbompkgid and werks in ('1001','1801') group by pno
-               union
-               select cno as matnr from pbomlib where pbompkgid=v_pbompkgid and werks in ('1001','1801') group by cno
+       ( select id from (
+                select max(t1.id) id, t1.no, t1.werks, t1.beskz, t1.sobsl,t1.sbdkz
+                from  TEMP_WK_MATLIB t1
+                 where t1.werks in ('1001','1801')
+                 group by t1.no, t1.werks, t1.beskz, t1.sobsl,t1.sbdkz
+                 ) t
+         where t.werks='1001' and t.beskz='F' and t.sbdkz='2' and t.sobsl='Z7' and t.no in  ---筛选条件九
+             (
+              select NFMAT from SIPM170 where pbompkgid=v_pbompkgid and nfwerks in ('1001','1801') group by NFMAT
               )
               and no not in (select no from SIPM170 where pbompkgid=v_pbompkgid group by no)
         );
        dbms_output.put_line('扩展顺序九 ：'||to_char(sysdate,'yyyy-mm-dd hh24:mi:ss'));
-       
-             ----顺序十：扩展物料主数据------
+
+             ----顺序十：扩展后继物料主数据------
         v_werks := '1806';
        insert into SIPM170 (id,publishtn, publishid, stn, sid, syncbatchno, syncdataitemno, syncuser, synctime, syncresult, syncmsg,
        needsyncsign, fmaterialid, del, msym, wkaid, designno, bldesignno, no, name, ver, ptype, ename,
@@ -647,92 +523,163 @@ begin
        lgpro, dzeit, plifz, webaz, fhori, eisbe, perkz, strgr, vrmod, vint1, vint2, miskz, mtvfp, kzaus, nfmat, sbdkz, fevor, co_prodprf,
        mhdrz, mhdhb, loggr, lgnum, ltkze, qmatv, qpart, qmata, ssqss, ztdline3, bklas, eklas, qklas, mlast, peinh, vprsv, losgr, awsls, hrkft,
        prctr, ekalr, hkmat, sobsk, zplp3, zpld3, sipm91id, sipm94id, sipm95id, sipm96id, sipm97id, sipm98id, ztime1, zdate, ztime2, zmsgtp2,
-       zmestx, prfrq, ausch,2,werks
-       from ( select * from TEMP_WK_PARTLIB
-              union                 
-              select a1.* from sipm190_last  a1
-              inner join (select * from pbomlib where pbompkgid=v_pbompkgid) t1
-              on a1.werks=t1.werks and (a1.no = t1.pno or a1.no = t1.cno)
-              and not exists(
-              select 1 from (select * from TEMP_WK_PARTLIB) t 
-              where a1.no=t.no and a1.werks=t.werks)
-              ) t
-
+       zmestx, prfrq, ausch,1,werks
+       from TEMP_WK_MATLIB t
         where id in
-       ( select id from (select max(t1.id) id, t1.no, t1.werks, t1.beskz, t1.sobsl,t1.sbdkz
-                           from  ( select * from TEMP_WK_PARTLIB
-              union                 
-              select a1.* from sipm190_last  a1
-              inner join (select * from pbomlib where pbompkgid=v_pbompkgid) t1
-              on a1.werks=t1.werks and (a1.no = t1.pno or a1.no = t1.cno)
-              and not exists(
-              select 1 from (select * from TEMP_WK_PARTLIB) t 
-              where a1.no=t.no and a1.werks=t.werks)
-                                    
-                                    ) t1
-                                    where t1.werks in ('1001','1801')
-                                    group by t1.no, t1.werks, t1.beskz, t1.sobsl,t1.sbdkz) t
-             where t.no like 'SW%'---筛选条件十
-             and t.no in 
-             (select pno as matnr from pbomlib where pbompkgid=v_pbompkgid and werks in ('1001','1801') group by pno
-               union
-               select cno as matnr from pbomlib where pbompkgid=v_pbompkgid and werks in ('1001','1801') group by cno
+       ( select id from (
+                select max(t1.id) id, t1.no, t1.werks, t1.beskz, t1.sobsl,t1.sbdkz
+                from TEMP_WK_MATLIB t1
+                 where t1.werks in ('1001','1801')
+                 group by t1.no, t1.werks, t1.beskz, t1.sobsl,t1.sbdkz
+                 ) t
+         where (t.no like 'SW%' or t.no like 'V%') and t.werks='1001' ---筛选条件十
+            and t.no in  
+             (
+              select NFMAT from SIPM170 where pbompkgid=v_pbompkgid and nfwerks in ('1001','1801') group by NFMAT
               )
               and no not in (select no from SIPM170 where pbompkgid=v_pbompkgid group by no)
         );
+        
        dbms_output.put_line('扩展顺序十 ：'||to_char(sysdate,'yyyy-mm-dd hh24:mi:ss'));
        
-       --------------------------------------------------------------------------------------------
-      --- 扩展后继物料
-   
-   
-   
-
-      -----------全局扩展P-BOM---------------
-       insert into bom7(id, no, name, ename, pno, bompst, cno, bnum, pbompkgid, bomver, werks, routeno,
-       pspnr, zcomplete, emeng, postp, ausch, alpgr, zkey, zposition, sanka, smemo, ztext, plant, bwz, pwlms, cwlms, xncp,creator,owner )
-       select '01_'||SYS_GUID() id,t.no, name, ename, pno, bompst, cno, bnum, pbompkgid, bomver, v_werks, routeno,
-       pspnr, zcomplete, emeng, postp, ausch, alpgr, zkey, zposition, sanka, smemo, ztext, plant, bwz, pwlms, cwlms, xncp,v_operator,v_operator
-       from pbomlib a
-       left join (
-       select no,werks,BESKZ,sbdkz,sobsl from sipm94
-       where not exists(select 1 from wk_sipm94 a where sipm94.no=a.no and sipm94.werks=a.werks) and  werks = '1001'
-       union
-       select  no,werks,BESKZ,sbdkz,sobsl from sipm190_last
-       where not exists(select 1 from wk_sipm94 a where sipm190_last.no=a.no and sipm190_last.werks=a.werks) and  werks = '1001'
-       union
-       select no,werks,BESKZ,sbdkz,sobsl from wk_sipm94 where werks = '1001'
-       ) t
-       on t.no=a.pno and t.werks=a.werks
-       where a.pbompkgid=v_pbompkgid and a.werks='1001' and t.BESKZ='E' 
-       and (t.sbdkz='1' or (t.sbdkz='-2' and t.sobsl is null) or (t.sbdkz='-2' and t.sobsl='50'));
-     -- dbms_output.put_line(to_char(sysdate,'yyyy-mm-dd hh24:mi:ss'))；
-     
-       ----全局扩展工艺路线------
-       insert into  SIPM171(id, partno
-       , prcvno, macht, werks, plantext, zversion, verwe, statu, vornr, arbpl, frdlb, ekorg, matkl, ekgrp, sakto, steus, ltxa1, ltxa2, splim,
-       zwnor, zeiwn, bmsch, meinh, umren, umrez, plnme, vgwrt01, vgwrteh01, vgwrt02, vgwrteh02, vgwrt03, vgwrteh03, vgwrt04, vgwrteh04, vgwrt05,
-       vgwrteh05, vgwrt06, vgwrteh06,creator,owner)
-       select '01_'||SYS_GUID(),partno
-       , prcvno, macht, t.werks, plantext, zversion, verwe, statu, vornr, arbpl, frdlb, ekorg, matkl, ekgrp, sakto, steus, ltxa1, ltxa2, splim,
-       zwnor, zeiwn, bmsch, meinh, umren, umrez, plnme, vgwrt01, vgwrteh01, vgwrt02, vgwrteh02, vgwrt03, vgwrteh03, vgwrt04, vgwrteh04, vgwrt05,
-       vgwrteh05, vgwrt06, vgwrteh06,v_operator,v_operator
-       from  processlib a
-       left join (
-       select no,werks,BESKZ,sbdkz,sobsl from sipm94
-       where not exists(select 1 from wk_sipm94 a where sipm94.no=a.no and sipm94.werks=a.werks) and  werks = '1001'
-       union
-       select  no,werks,BESKZ,sbdkz,sobsl from sipm190_last
-       where not exists(select 1 from wk_sipm94 a where sipm190_last.no=a.no and sipm190_last.werks=a.werks) and  werks = '1001'
-       union
-       select no,werks,BESKZ,sbdkz,sobsl from wk_sipm94 where werks = '1001'
-       ) t
-        on t.no=a.partno and t.werks=a.werks
-       where a.pbompkgid=v_pbompkgid and a.werks='1001' and t.BESKZ='E' 
-       and (t.sbdkz='1' or (t.sbdkz='-2' and t.sobsl is null) or (t.sbdkz='-2' and t.sobsl='50'));
-      -- dbms_output.put_line(to_char(sysdate,'yyyy-mm-dd hh24:mi:ss'));
-      
+       ----顺序十一：扩展后继物料主数据------
+        v_werks := '1806';
+        v_beskz := 'F';
+        v_sbdkz := '2';
+        v_berid := 'NMRP_1806';
+        v_dispr := 'SS01';
+        v_sobsl := 'Y6';
+       insert into SIPM170 (id,publishtn, publishid, stn, sid, syncbatchno, syncdataitemno, syncuser, synctime, syncresult, syncmsg,
+       needsyncsign, fmaterialid, del, msym, wkaid, designno, bldesignno, no, name, ver, ptype, ename,
+       creator, ctime, muser, mtime, chkusr, chktime, duser, deltime, alteruser, owner, state, smemo,
+       pbompkgid, fromid, mtart, extwg, matkl, groes, spart, oldno, maktx, tdline, zind, unit, zvariant,
+       zmaktx, zsize, ztype, zcolor, zbranch, zauth, zrohs, zpackage, zpaper, zversion, zmanual, mstae,
+       mtpos, werks, classnum, classtype, numerator, denominatr, bstme, xchpf, kordb, ekgrp, ztdline1, vkorg, vtweg, ktgrm, aland,
+       tatyp, taxkm, mtpos1, tragr, ladgr, ztdline2, dismm, dispo, disls, bstrf, bstmi, berid, dispr, beskz, sobsl, rgekm, lgfsb,
+       lgpro, dzeit, plifz, webaz, fhori, eisbe, perkz, strgr, vrmod, vint1, vint2, miskz, mtvfp, kzaus, nfmat, sbdkz, fevor, co_prodprf,
+       mhdrz, mhdhb, loggr, lgnum, ltkze, qmatv, qpart, qmata, ssqss, ztdline3, bklas, eklas, qklas, mlast, peinh, vprsv, losgr, awsls, hrkft,
+       prctr, ekalr, hkmat, sobsk, zplp3, zpld3, sipm91id, sipm94id, sipm95id, sipm96id, sipm97id, sipm98id, ztime1, zdate, ztime2, zmsgtp2,
+       zmestx, prfrq, ausch ,ordernum,nfwerks)
+       select   '01_'||SYS_GUID(),publishtn, publishid, stn, sid, syncbatchno, syncdataitemno, syncuser, synctime, syncresult, syncmsg,
+       needsyncsign, fmaterialid, del, msym, wkaid, designno, bldesignno, no, name, ver, ptype, ename,
+       v_operator, ctime, muser, mtime, chkusr, chktime, duser, deltime, alteruser, v_operator, state, smemo,
+       v_pbompkgid, fromid, mtart, extwg, matkl, groes, spart, oldno, maktx, tdline, zind, unit, zvariant,
+       zmaktx, zsize, ztype, zcolor, zbranch, zauth, zrohs, zpackage, zpaper, zversion, zmanual, mstae,
+       mtpos, v_werks, classnum, classtype, numerator, denominatr, bstme, xchpf, kordb, ekgrp, ztdline1, vkorg, vtweg, ktgrm, aland,
+       tatyp, taxkm, mtpos1, tragr, ladgr, ztdline2, dismm, dispo, disls, bstrf, bstmi, v_berid, v_dispr, v_beskz, v_sobsl, rgekm, lgfsb,
+       lgpro, dzeit, plifz, webaz, fhori, eisbe, perkz, strgr, vrmod, vint1, vint2, miskz, mtvfp, kzaus, nfmat, v_sbdkz, fevor, co_prodprf,
+       mhdrz, mhdhb, loggr, lgnum, ltkze, qmatv, qpart, qmata, ssqss, ztdline3, bklas, eklas, qklas, mlast, peinh, vprsv, losgr, awsls, hrkft,
+       prctr, ekalr, hkmat, sobsk, zplp3, zpld3, sipm91id, sipm94id, sipm95id, sipm96id, sipm97id, sipm98id, ztime1, zdate, ztime2, zmsgtp2,
+       zmestx, prfrq, ausch,1,werks
+      from TEMP_WK_MATLIB t
+        where id in
+       ( select id from (
+                select max(t1.id) id, t1.no, t1.werks, t1.beskz, t1.sobsl,t1.sbdkz
+                from  TEMP_WK_MATLIB t1
+                 where t1.werks in ('1001','1801')
+                 group by t1.no, t1.werks, t1.beskz, t1.sobsl,t1.sbdkz
+                 ) t
+         where t.werks='1001' and t.beskz='X' and t.sbdkz='2' and t.sobsl is null ---筛选条件十一
+              and t.no in  
+             (
+              select NFMAT from SIPM170 where pbompkgid=v_pbompkgid and nfwerks in ('1001','1801') group by NFMAT
+              )
+              and no not in (select no from SIPM170 where pbompkgid=v_pbompkgid group by no)
+        );
+       dbms_output.put_line('扩展顺序十一 ：'||to_char(sysdate,'yyyy-mm-dd hh24:mi:ss'));
+       
+         ----顺序十二：扩展后继物料主数据------
+        v_werks := '1806';
+        v_beskz := 'F';
+        v_sbdkz := '1';
+        v_berid := 'NMRP_1806';
+        v_dispr := 'SS01';
+        v_sobsl := 'Y6';
+       insert into SIPM170 (id,publishtn, publishid, stn, sid, syncbatchno, syncdataitemno, syncuser, synctime, syncresult, syncmsg,
+       needsyncsign, fmaterialid, del, msym, wkaid, designno, bldesignno, no, name, ver, ptype, ename,
+       creator, ctime, muser, mtime, chkusr, chktime, duser, deltime, alteruser, owner, state, smemo,
+       pbompkgid, fromid, mtart, extwg, matkl, groes, spart, oldno, maktx, tdline, zind, unit, zvariant,
+       zmaktx, zsize, ztype, zcolor, zbranch, zauth, zrohs, zpackage, zpaper, zversion, zmanual, mstae,
+       mtpos, werks, classnum, classtype, numerator, denominatr, bstme, xchpf, kordb, ekgrp, ztdline1, vkorg, vtweg, ktgrm, aland,
+       tatyp, taxkm, mtpos1, tragr, ladgr, ztdline2, dismm, dispo, disls, bstrf, bstmi, berid, dispr, beskz, sobsl, rgekm, lgfsb,
+       lgpro, dzeit, plifz, webaz, fhori, eisbe, perkz, strgr, vrmod, vint1, vint2, miskz, mtvfp, kzaus, nfmat, sbdkz, fevor, co_prodprf,
+       mhdrz, mhdhb, loggr, lgnum, ltkze, qmatv, qpart, qmata, ssqss, ztdline3, bklas, eklas, qklas, mlast, peinh, vprsv, losgr, awsls, hrkft,
+       prctr, ekalr, hkmat, sobsk, zplp3, zpld3, sipm91id, sipm94id, sipm95id, sipm96id, sipm97id, sipm98id, ztime1, zdate, ztime2, zmsgtp2,
+       zmestx, prfrq, ausch ,ordernum,nfwerks)
+       select   '01_'||SYS_GUID(),publishtn, publishid, stn, sid, syncbatchno, syncdataitemno, syncuser, synctime, syncresult, syncmsg,
+       needsyncsign, fmaterialid, del, msym, wkaid, designno, bldesignno, no, name, ver, ptype, ename,
+       v_operator, ctime, muser, mtime, chkusr, chktime, duser, deltime, alteruser, v_operator, state, smemo,
+       v_pbompkgid, fromid, mtart, extwg, matkl, groes, spart, oldno, maktx, tdline, zind, unit, zvariant,
+       zmaktx, zsize, ztype, zcolor, zbranch, zauth, zrohs, zpackage, zpaper, zversion, zmanual, mstae,
+       mtpos, v_werks, classnum, classtype, numerator, denominatr, bstme, xchpf, kordb, ekgrp, ztdline1, vkorg, vtweg, ktgrm, aland,
+       tatyp, taxkm, mtpos1, tragr, ladgr, ztdline2, dismm, dispo, disls,null as bstrf,null as bstmi, v_berid, v_dispr, v_beskz, v_sobsl, rgekm, lgfsb,
+       lgpro, dzeit, plifz, webaz, fhori, eisbe, perkz, strgr, vrmod, vint1, vint2, miskz, mtvfp, kzaus, nfmat, v_sbdkz, fevor, co_prodprf,
+       mhdrz, mhdhb, loggr, lgnum, ltkze, qmatv, qpart, qmata, ssqss, ztdline3, bklas, eklas, qklas, mlast, peinh, vprsv, losgr, awsls, hrkft,
+       prctr, ekalr, hkmat, sobsk, zplp3, zpld3, sipm91id, sipm94id, sipm95id, sipm96id, sipm97id, sipm98id, ztime1, zdate, ztime2, zmsgtp2,
+       zmestx, prfrq, ausch,1,werks
+      from TEMP_WK_MATLIB t
+        where id in
+       ( select id from (
+                select max(t1.id) id, t1.no, t1.werks, t1.beskz, t1.sobsl,t1.sbdkz
+                from  TEMP_WK_MATLIB t1
+                 where t1.werks in ('1001','1801')
+                 group by t1.no, t1.werks, t1.beskz, t1.sobsl,t1.sbdkz
+                 ) t
+         where t.werks='1001' and t.beskz='F' and t.sbdkz='1' and t.sobsl = '30' ---筛选条件十二
+              and t.no in  
+             (
+              select NFMAT from SIPM170 where pbompkgid=v_pbompkgid and nfwerks in ('1001','1801') group by NFMAT
+              )
+              and no not in (select no from SIPM170 where pbompkgid=v_pbompkgid group by no)
+        );
+       dbms_output.put_line('扩展顺序十二 ：'||to_char(sysdate,'yyyy-mm-dd hh24:mi:ss'));
+       
+       ----顺序十三：扩展后继物料主数据------
+        v_werks := '1806';
+        v_beskz := 'F';
+        v_sbdkz := '2';
+        v_berid := 'NMRP_1806';
+        v_dispr := 'SS01';
+        v_sobsl := 'Y6';
+       insert into SIPM170 (id,publishtn, publishid, stn, sid, syncbatchno, syncdataitemno, syncuser, synctime, syncresult, syncmsg,
+       needsyncsign, fmaterialid, del, msym, wkaid, designno, bldesignno, no, name, ver, ptype, ename,
+       creator, ctime, muser, mtime, chkusr, chktime, duser, deltime, alteruser, owner, state, smemo,
+       pbompkgid, fromid, mtart, extwg, matkl, groes, spart, oldno, maktx, tdline, zind, unit, zvariant,
+       zmaktx, zsize, ztype, zcolor, zbranch, zauth, zrohs, zpackage, zpaper, zversion, zmanual, mstae,
+       mtpos, werks, classnum, classtype, numerator, denominatr, bstme, xchpf, kordb, ekgrp, ztdline1, vkorg, vtweg, ktgrm, aland,
+       tatyp, taxkm, mtpos1, tragr, ladgr, ztdline2, dismm, dispo, disls, bstrf, bstmi, berid, dispr, beskz, sobsl, rgekm, lgfsb,
+       lgpro, dzeit, plifz, webaz, fhori, eisbe, perkz, strgr, vrmod, vint1, vint2, miskz, mtvfp, kzaus, nfmat, sbdkz, fevor, co_prodprf,
+       mhdrz, mhdhb, loggr, lgnum, ltkze, qmatv, qpart, qmata, ssqss, ztdline3, bklas, eklas, qklas, mlast, peinh, vprsv, losgr, awsls, hrkft,
+       prctr, ekalr, hkmat, sobsk, zplp3, zpld3, sipm91id, sipm94id, sipm95id, sipm96id, sipm97id, sipm98id, ztime1, zdate, ztime2, zmsgtp2,
+       zmestx, prfrq, ausch ,ordernum,nfwerks)
+       select   '01_'||SYS_GUID(),publishtn, publishid, stn, sid, syncbatchno, syncdataitemno, syncuser, synctime, syncresult, syncmsg,
+       needsyncsign, fmaterialid, del, msym, wkaid, designno, bldesignno, no, name, ver, ptype, ename,
+       v_operator, ctime, muser, mtime, chkusr, chktime, duser, deltime, alteruser, v_operator, state, smemo,
+       v_pbompkgid, fromid, mtart, extwg, matkl, groes, spart, oldno, maktx, tdline, zind, unit, zvariant,
+       zmaktx, zsize, ztype, zcolor, zbranch, zauth, zrohs, zpackage, zpaper, zversion, zmanual, mstae,
+       mtpos, v_werks, classnum, classtype, numerator, denominatr, bstme, xchpf, kordb, ekgrp, ztdline1, vkorg, vtweg, ktgrm, aland,
+       tatyp, taxkm, mtpos1, tragr, ladgr, ztdline2, dismm, dispo, disls,null as bstrf,null as bstmi, v_berid, v_dispr, v_beskz, v_sobsl, rgekm, lgfsb,
+       lgpro, dzeit, plifz, webaz, fhori, eisbe, perkz, strgr, vrmod, vint1, vint2, miskz, mtvfp, kzaus, nfmat, v_sbdkz, fevor, co_prodprf,
+       mhdrz, mhdhb, loggr, lgnum, ltkze, qmatv, qpart, qmata, ssqss, ztdline3, bklas, eklas, qklas, mlast, peinh, vprsv, losgr, awsls, hrkft,
+       prctr, ekalr, hkmat, sobsk, zplp3, zpld3, sipm91id, sipm94id, sipm95id, sipm96id, sipm97id, sipm98id, ztime1, zdate, ztime2, zmsgtp2,
+       zmestx, prfrq, ausch,1,werks
+      from TEMP_WK_MATLIB t
+        where id in
+       ( select id from (
+                select max(t1.id) id, t1.no, t1.werks, t1.beskz, t1.sobsl,t1.sbdkz
+                from  TEMP_WK_MATLIB t1
+                 where t1.werks in ('1001','1801')
+                 group by t1.no, t1.werks, t1.beskz, t1.sobsl,t1.sbdkz
+                 ) t
+         where t.werks='1001' and t.beskz='F' and t.sbdkz='2' and t.sobsl = '30' ---筛选条件十三
+              and t.no in  
+             (
+              select NFMAT from SIPM170 where pbompkgid=v_pbompkgid and nfwerks in ('1001','1801') group by NFMAT
+              )
+              and no not in (select no from SIPM170 where pbompkgid=v_pbompkgid group by no)
+        );
+       dbms_output.put_line('扩展顺序十三 ：'||to_char(sysdate,'yyyy-mm-dd hh24:mi:ss'));
+       
        commit;
-
-end;
+  end;
 /

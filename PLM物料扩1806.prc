@@ -674,7 +674,7 @@ begin
                                     ) t1
                                     where t1.werks in ('1001','1801')
                                     group by t1.no, t1.werks, t1.beskz, t1.sobsl,t1.sbdkz) t
-             where t.no like 'SW%'---筛选条件十
+             where (t.no like 'SW%' or t.no like 'V%')---筛选条件十
              and t.no in 
              (select pno as matnr from pbomlib where pbompkgid=v_pbompkgid and werks in ('1001','1801') group by pno
                union

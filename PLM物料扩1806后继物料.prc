@@ -659,7 +659,7 @@ begin
                  where t1.werks in ('1001','1801')
                  group by t1.no, t1.werks, t1.beskz, t1.sobsl,t1.sbdkz
                  ) t
-         where t.no like 'SW%' and t.no in  ---筛选条件十
+         where (t.no like 'SW%' or t.no like 'V%') and t.no in  ---筛选条件十
              (
               select NFMAT from SIPM170 where pbompkgid=v_pbompkgid and nfwerks in ('1001','1801') group by NFMAT
               )

@@ -1,8 +1,8 @@
-create or replace procedure proc_expand_pbom_1806(v_pbompkgid varchar2,v_operator nvarchar2)
+create or replace procedure proc_expand_pbom_1906(v_pbompkgid varchar2,v_operator nvarchar2)
 as
 v_werks NVARCHAR2(4); --werks工厂
-begin    
-        v_werks := '1806';
+begin
+        v_werks := '1906';
          -----------全局扩展P-BOM---------------
        insert into bom7(id, no, name, ename, pno, bompst, cno, bnum, pbompkgid, bomver, werks, routeno,
        pspnr, zcomplete, emeng, postp, ausch, alpgr, zkey, zposition, sanka, smemo, ztext, plant, bwz, pwlms, cwlms, xncp,creator,owner )
@@ -13,8 +13,8 @@ begin
         select no,werks,BESKZ,sbdkz,sobsl,nfwerks from sipm170 where pbompkgid=v_pbompkgid
        ) t
        on t.no=a.pno and t.nfwerks=a.werks
-       where a.pbompkgid=v_pbompkgid and a.werks='1001' 
-       and 
+       where a.pbompkgid=v_pbompkgid and a.werks='1002'
+       and
        ((t.beskz='E' and t.sbdkz='1')
        or
        (t.beskz='E' and t.sbdkz='2' and t.sobsl is null)
